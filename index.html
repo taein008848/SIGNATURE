@@ -25,48 +25,47 @@
         }
     </style>
     <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script>
         // Firebase 설정 및 초기화
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID",
-            measurementId: "YOUR_MEASUREMENT_ID"
+        var firebaseConfig = {
+            apiKey: "AIzaSyCzOWsqoJ2DW45lzYIGehC5gEhBFFjQkg4",
+            authDomain: "taein-24032.firebaseapp.com",
+            projectId: "taein-24032",
+            storageBucket: "taein-24032.appspot.com",
+            messagingSenderId: "974345716486",
+            appId: "1:974345716486:web:d43cae89afa87543d5d487",
+            measurementId: "G-Q3X6KKMZ1M"
         };
+        
+        // Firebase 초기화
         firebase.initializeApp(firebaseConfig);
-        const storage = firebase.storage();
-        const database = firebase.database();
+        
+        // Firebase Storage 및 Realtime Database 참조 생성
+        var storage = firebase.storage();
+        var database = firebase.database();
     </script>
 </head>
 <body>
     <h1>전자 서명 양식</h1>
-    
-    <!-- 이름 입력란 추가 -->
-    <label for="name">이름:</label>
-    <input type="text" id="name" placeholder="Your Name" required>
-
-    <!-- 서명 패드 -->
     <div id="signature-pad">
         <canvas></canvas>
     </div>
-    
     <button id="clear">Clear</button>
     <button id="save">Save</button>
     <img id="signature-image" src="" alt="Signature Image" style="display:none;"/>
-
+    
+    <!-- Signature Pad -->
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    
     <script>
-        const canvas = document.querySelector("canvas");
-        const signaturePad = new SignaturePad(canvas);
+        var canvas = document.querySelector("canvas");
+        var signaturePad = new SignaturePad(canvas);
 
         function resizeCanvas() {
-            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            var ratio = Math.max(window.devicePixelRatio || 1, 1);
             canvas.width = canvas.offsetWidth * ratio;
             canvas.height = canvas.offsetHeight * ratio;
             canvas.getContext("2d").scale(ratio, ratio);
@@ -76,35 +75,30 @@
         window.addEventListener("resize", resizeCanvas);
         resizeCanvas();
 
-        document.getElementById("clear").addEventListener("click", () => {
+        document.getElementById("clear").addEventListener("click", function() {
             signaturePad.clear();
         });
 
-        document.getElementById("save").addEventListener("click", () => {
-            // 이름 입력란과 서명 확인
-            const nameInput = document.getElementById("name").value;
-
-            if (!nameInput) {
-                alert("Please enter your name.");
-                return;
-            }
-
+        document.getElementById("save").addEventListener("click", function() {
             if (signaturePad.isEmpty()) {
                 alert("Please provide a signature first.");
             } else {
-                const dataURL = signaturePad.toDataURL();
-                const img = document.getElementById("signature-image");
+                var dataURL = signaturePad.toDataURL();
+                var img = document.getElementById("signature-image");
                 img.src = dataURL;
                 img.style.display = "block";  // 이미지 표시
-
-                // Firebase에 이름과 서명 저장 함수 호출
-                saveSignatureToFirebase(dataURL, nameInput);
+                
+                // Firebase에 서명 저장 함수 호출
+                saveSignatureToFirebase(dataURL);
             }
         });
 
-        function saveSignatureToFirebase(dataURL, name) {
-            const storageRef = storage.ref();
-            const signatureRef = storageRef.child('signatures/' + Date.now() + '.png');
+        function saveSignatureToFirebase(dataURL) {
+            // storage 변수가 제대로 정의되었는지 확인
+            console.log('Firebase Storage:', storage);
+
+            var storageRef = storage.ref();
+            var signatureRef = storageRef.child('signatures/' + Date.now() + '.png');
 
             // 데이터 URL을 Blob으로 변환
             fetch(dataURL)
@@ -116,12 +110,11 @@
                     return snapshot.ref.getDownloadURL();
                 })
                 .then(function(downloadURL) {
-                    // 실시간 데이터베이스에 이름과 서명 URL 저장
-                    const newSignatureRef = database.ref('signatures').push();
+                    // 실시간 데이터베이스에 서명 URL 저장
+                    var newSignatureRef = database.ref('signatures').push();
                     newSignatureRef.set({
-                        name: name,  // 이름 저장
-                        url: downloadURL,  // 서명 이미지 URL 저장
-                        timestamp: Date.now()  // 현재 시간 저장
+                        url: downloadURL,
+                        timestamp: Date.now()
                     });
                     alert('Signature uploaded successfully!');
                 })
